@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'onlineC_Example' do
+  pod 'onlineC', :path => '../'
+
+  target 'onlineC_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
