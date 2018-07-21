@@ -1,0 +1,57 @@
+{
+  "name": "onlineC",
+  "version": "0.1.0",
+  "summary": "A short description of onlineC.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/Zydhjx/onlineC",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "Zydhjx": "1551433476@qq.com"
+  },
+  "source": {
+    "git": "https://github.com/Zydhjx/onlineC.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "source_files": "onlineC/Classes/**/*",
+  "resource_bundles": {
+    "onlineC": [
+      "onlineC/Assets/*.png"
+    ]
+  },
+  "resources": [
+    "onlineC/**/*.png",
+    "onlineC/**/*.xib",
+    "onlineC/**/*.plist",
+    "onlineC/**/*.xcassets",
+    "onlineC/**/*.json"
+  ],
+  "dependencies": {
+    "AFNetworking": [
+
+    ],
+    "Masonry": [
+
+    ],
+    "MJRefresh": [
+
+    ],
+    "ObjectiveGumbo": [
+
+    ],
+    "YYText": [
+
+    ],
+    "SDWebImage": [
+
+    ],
+    "SocketRocket": [
+
+    ]
+  }
+}

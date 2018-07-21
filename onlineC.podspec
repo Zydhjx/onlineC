@@ -32,11 +32,19 @@ TODO: Add long description of the pod here.
 
   s.source_files = 'onlineC/Classes/**/*'
   
-  # s.resource_bundles = {
-  #   'onlineC' => ['onlineC/Assets/*.png']
-  # }
+  s.resource_bundles = {
+    'onlineC' => ['onlineC/Assets/*.png']
+  }
+  
+  s.resources = ['onlineC/**/*.png', 'onlineC/**/*.xib', 'onlineC/**/*.plist', 'onlineC/**/*.xcassets', 'onlineC/**/*.json']
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
   # s.frameworks = 'UIKit', 'MapKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
+  s.dependency 'AFNetworking'
+  s.dependency 'Masonry'
+  s.dependency 'MJRefresh'
+  s.dependency 'ObjectiveGumbo'
+  s.dependency 'YYText'
+  s.dependency 'SDWebImage'
+  s.dependency 'SocketRocket'
 end

@@ -7,12 +7,17 @@
 //
 
 #import "OCSAppDelegate.h"
+#import "OCSViewController.h"
 
 @implementation OCSAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
+    
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:OCSViewController.new];
+    self.window.rootViewController = navigationController;
+    
     return YES;
 }
 
