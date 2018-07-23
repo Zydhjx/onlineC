@@ -57,4 +57,7 @@ typedef NS_ENUM(NSUInteger, OCSNetworkURLPathType) {
 // 上传图片
 + (void)uploadPictureWithParameters:(NSDictionary *)parameters completion:(void (^)(id responseObject, NSError *error))completion;
 
+// 客户动作信息记录
++ (void)actionRecordWithParameters:(NSDictionary *)parameters completion:(void (^)(id responseObject, NSError *error))completion;
+
 @end

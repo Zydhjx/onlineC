@@ -31,6 +31,10 @@
     "onlineC/**/*.xcassets",
     "onlineC/**/*.json"
   ],
+  "ios": {
+    "vendored_frameworks": "onlineC/Frameworks/**/*.framework"
+  },
+  "public_header_files": "Pod/Classes/**/OCSSessionGenerator.h",
   "dependencies": {
     "AFNetworking": [
 
@@ -51,6 +55,9 @@
 
     ],
     "SocketRocket": [
+
+    ],
+    "TZImagePickerController": [
 
     ]
   }

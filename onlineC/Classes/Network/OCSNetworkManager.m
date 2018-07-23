@@ -23,6 +23,7 @@ static NSString * const kUserChatSuffix = @"member/c1/f3";  // 用户聊天内�
 static NSString * const kSessionSuffix = @"member/c1/f2";  // 会话接入
 static NSString * const kChatContentSuffix = @"member/c1/f14";  //  通过信息ID查询聊天内容
 static NSString * const kUploadPictureSuffix = @"member/c1/f16";  // 上传图片
+static NSString * const kActionRecordSuffix = @"member/c1/f5";  // 客户动作记录
 
 
 /** 存储所有的URL路径类型 **/
@@ -189,7 +190,7 @@ static NSDictionary * (^ const URLPathsKeyedByType)(void) = ^NSDictionary *{
             return;
         }
         
-        completion ? completion([dataArray lastObject], nil) : nil;
+        completion ? completion(dataArray, nil) : nil;
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         completion ? completion(nil, error) : nil;
     }];
@@ -280,6 +281,27 @@ static NSDictionary * (^ const URLPathsKeyedByType)(void) = ^NSDictionary *{
         }
         
         completion ? completion([dataArray lastObject], nil) : nil;
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        completion ? completion(nil, error) : nil;
+    }];
+}
+
++ (void)actionRecordWithParameters:(NSDictionary *)parameters completion:(void (^)(id responseObject, NSError *error))completion {
+    NSString *URLString = [kBaseURLString stringByAppendingString:kActionRecordSuffix];
+    [[AFHTTPSessionManager manager] POST:URLString parameters:parameters progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        if (!(responseObject && [responseObject isKindOfClass:NSDictionary.class])) {
+            completion ? completion(nil, nil) : nil;
+            return;
+        }
+        
+        NSDictionary *responseDictionary = (NSDictionary *)responseObject;
+        id dataDictionary = [responseDictionary valueForKey:@"data"];
+        if (!(dataDictionary && [dataDictionary isKindOfClass:NSDictionary.class])) {
+            completion ? completion(nil, nil) : nil;
+            return;
+        }
+        
+        completion ? completion(dataDictionary, nil) : nil;
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         completion ? completion(nil, error) : nil;
     }];

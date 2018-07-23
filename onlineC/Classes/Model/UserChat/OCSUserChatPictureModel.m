@@ -10,30 +10,24 @@
 
 @implementation OCSUserChatPictureModel
 
++ (void)load {
+    [self setValue:self forKey:@"02"];
+}
+
 - (instancetype)initWithDictionary:(NSDictionary *)dictionary {
-    self = [super init];
+    // 在子类中处理dictionary为需要的样式
+    dictionary = [self attributedStringDictionaryWithDictionary:dictionary];
+    
+    self = [super initWithDictionary:dictionary];
     if (!self) { return nil; }
-    
-    [self setValuesForKeysWithDictionary:dictionary];
-    
     return self;
 }
 
-+ (instancetype)modelWithDictionary:(NSDictionary *)dictionary {
-    id model = [[self alloc] initWithDictionary:dictionary];
-    return model;
-}
+#pragma mark -- 处理dictionary的方法
 
-#pragma mark - 未定义的属性
-
-- (id)valueForUndefinedKey:(NSString *)key {
-    return nil;
-}
-
-#pragma mark - 设置未定义的属性的值(用于数据字段和系统字段冲突的情况)
-
-- (void)setValue:(id)value forUndefinedKey:(NSString *)key {
-    
+- (NSDictionary *)attributedStringDictionaryWithDictionary:(NSDictionary *)dictionary {
+    NSMutableDictionary *mutableDictionary = [dictionary mutableCopy];
+    return [mutableDictionary copy];
 }
 
 #pragma mark - cellIdentifier

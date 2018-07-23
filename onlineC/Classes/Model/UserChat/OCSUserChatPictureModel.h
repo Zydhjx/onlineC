@@ -11,6 +11,4 @@
 
 @property (strong, nonatomic) UIImage *uploadImage;
 
-+ (instancetype)modelWithDictionary:(NSDictionary *)dictionary;
-
 @end

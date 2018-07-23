@@ -12,8 +12,6 @@
 // 是否存在敏感词 1.存在  0.不存在
 //@property (copy, nonatomic) NSString *sensitiveWordsFlag;
 // 文本内容
-@property (copy, nonatomic) NSString *sensitiveWordContent;
-
-+ (instancetype)modelWithDictionary:(NSDictionary *)dictionary;
+@property (copy, nonatomic) NSAttributedString *sensitiveWordContent;
 
 @end

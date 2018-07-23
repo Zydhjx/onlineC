@@ -24,11 +24,13 @@ PODS:
     - ObjectiveGumbo
     - SDWebImage
     - SocketRocket
+    - TZImagePickerController
     - YYText
   - SDWebImage (4.4.2):
     - SDWebImage/Core (= 4.4.2)
   - SDWebImage/Core (4.4.2)
   - SocketRocket (0.5.1)
+  - TZImagePickerController (2.2.2)
   - YYText (1.0.7)
 
 DEPENDENCIES:
@@ -42,6 +44,7 @@ SPEC REPOS:
     - ObjectiveGumbo
     - SDWebImage
     - SocketRocket
+    - TZImagePickerController
     - YYText
 
 EXTERNAL SOURCES:
@@ -53,9 +56,10 @@ SPEC CHECKSUMS:
   Masonry: 678fab65091a9290e40e2832a55e7ab731aad201
   MJRefresh: b48380ae2b927b46c4ef000de9adb8dc748e1df7
   ObjectiveGumbo: 0704c4930688132abb3d5df2000334f30504856f
-  onlineC: 10e32da90813f08951d556fee0d678d77740229d
+  onlineC: fc486dc9057a5360d7b44ed2ba978fcbb1f9560f
   SDWebImage: 624d6e296c69b244bcede364c72ae0430ac14681
   SocketRocket: d57c7159b83c3c6655745cd15302aa24b6bae531
+  TZImagePickerController: 233a868727a813b4ca810a15035320b3bcb94ead
   YYText: 5c461d709e24d55a182d1441c41dc639a18a4849
 
 PODFILE CHECKSUM: cd424b592ddc7a8f1d627bdb382a26424c6f951b

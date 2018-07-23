@@ -14,6 +14,7 @@
 
 #import <Masonry.h>
 #import <SDWebImage/UIImageView+WebCache.h>
+#import <YYLabel.h>
 
 @interface OCSPictureWordCell ()
 
@@ -73,8 +74,10 @@
     // 需要优化
     UIView *lastView = self.messageView;
     for (NSInteger i = 0; i < model.contents.count; i++) {
-        UILabel *textLabel = [[UILabel alloc] init];
+        YYLabel *textLabel = [[YYLabel alloc] init];
         textLabel.numberOfLines = 0;
+        // 131为除label外的宽度
+        textLabel.preferredMaxLayoutWidth = [UIScreen mainScreen].bounds.size.width - 131;
         textLabel.font = [UIFont systemFontOfSize:14.0f];
         textLabel.textColor = [UIColor colorWithHexString:@"#333333"];
         textLabel.attributedText = contents[i];

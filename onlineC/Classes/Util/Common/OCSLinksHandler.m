@@ -46,7 +46,11 @@
         } if ([node isKindOfClass:OGText.class] && node.text > 0) {
             NSDictionary *attributes = @{NSFontAttributeName: [UIFont systemFontOfSize:14.0f],
                                          NSForegroundColorAttributeName: [UIColor colorWithHexString:@"#333333"]};
-            NSAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:node.text attributes:attributes];
+            
+            // 处理表情
+            NSMutableAttributedString *attributedString = [[self imageAttributedStringWithText:node.text] mutableCopy];
+            [attributedString addAttributes:attributes range:NSMakeRange(0, attributedString.length)];
+            
             [totalAttributedString appendAttributedString:attributedString];
         }
     }];
@@ -71,6 +75,11 @@
         dictionary = @{@"eventType": @(OCSLinksEventTypeURL),
                        @"actionType": @"02",
                        @"href": hrefValue};
+    } else if ([hrefValue isEqualToString:@"离开"]) {
+        // 离开
+        dictionary = @{@"eventType": @(OCSLinksEventTypeLeave),
+                       @"actionType": @"03",
+                       @"href": hrefValue};
     } else {
         // 跳转app中其他页面的情况
         dictionary = @{@"eventType": @(OCSLinksEventTypeAppInner),
@@ -79,6 +88,33 @@
     }
     
     [[NSNotificationCenter defaultCenter] postNotificationName:OCSSessionHandleLinksEventNotification object:dictionary];
+}
+
++ (NSAttributedString *)imageAttributedStringWithText:(NSString *)text {
+    NSString *pattern = @"\\[:bq[1-9][0-9]{0,1}\\]";
+    NSError *error = nil;
+    NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:text];
+    NSRegularExpression *regex = [[NSRegularExpression alloc] initWithPattern:pattern options:NSRegularExpressionCaseInsensitive error:&error];
+    [regex enumerateMatchesInString:text options:NSMatchingReportProgress range:NSMakeRange(0, text.length) usingBlock:^(NSTextCheckingResult * _Nullable result, NSMatchingFlags flags, BOOL * _Nonnull stop) {
+        NSString *string = [text substringWithRange:result.range];
+        if (string.length) {
+            NSRange newRange = [attributedString.string rangeOfString:string];
+            if ([string hasPrefix:@"[:"]) {
+                string = [string substringFromIndex:@"[:".length];
+            }
+            if ([string hasSuffix:@"]"]) {
+                string = [string substringToIndex:string.length - 1];
+            }
+            string = [@"emoticon_" stringByAppendingString:string];
+            NSTextAttachment *textAttachment = [[NSTextAttachment alloc] initWithData:nil ofType:nil];
+            textAttachment.image = [UIImage imageNamed:string];
+            NSAttributedString *imageAttributedString = [NSAttributedString attributedStringWithAttachment:textAttachment];
+            if (imageAttributedString) {
+                [attributedString replaceCharactersInRange:newRange withAttributedString:imageAttributedString];
+            }
+        }
+    }];
+    return [attributedString copy];
 }
 
 @end

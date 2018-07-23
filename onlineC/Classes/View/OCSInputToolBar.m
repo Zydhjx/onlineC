@@ -9,18 +9,18 @@
 
 #import "UIView+OCSFrame.h"
 #import "UIColor+OCSExtension.h"
-#import "YYTextView+OCSExtension.h"
+#import "UITextView+OCSExtension.h"
 
 #import <Masonry.h>
 #import <YYText.h>
 
 CGFloat const OCSInputToolBarHeight = 44.0f;
 
-@interface OCSInputToolBar () <YYTextViewDelegate>
+@interface OCSInputToolBar () <UITextViewDelegate>
 
 @property (strong, nonatomic) UIButton *moreMediaButton;
 @property (strong, nonatomic) UIButton *sendButton;
-@property (strong, nonatomic) YYTextView *textView;
+@property (strong, nonatomic) UITextView *textView;
 @property (strong, nonatomic) UIView *topSeparator;
 @property (assign, nonatomic) NSUInteger maxInputLength;
 
@@ -90,21 +90,21 @@ CGFloat const OCSInputToolBarHeight = 44.0f;
 
 - (void)handleSendButtonEvent:(UIButton *)button {
     if (self.sendButtonCallback) {
-        self.sendButtonCallback(self.textView.text);
+        self.sendButtonCallback(self.textView.attributedText);
     }
     
-    self.textView.text = nil;
+    self.textView.attributedText = nil;
 }
 
-#pragma mark - YYTextViewDelegate
+#pragma mark - UITextViewDelegate
 
-- (void)textViewDidBeginEditing:(YYTextView *)textView {
+- (void)textViewDidBeginEditing:(UITextView *)textView {
     if (self.textViewDidBeginEditing) {
         self.textViewDidBeginEditing();
     }
 }
 
-- (void)textViewDidChange:(YYTextView *)textView {
+- (void)textViewDidChange:(UITextView *)textView {
     if ([textView restrictTextLengthWithMaxAllowableInput:self.maxInputLength]) {
         return;
     }
@@ -124,16 +124,44 @@ CGFloat const OCSInputToolBarHeight = 44.0f;
     if (newHeight == oldHeight || oldHeight == 0) {
         return;
     }
-    
+
     CGFloat height = self.height + newHeight - oldHeight;
     [self mas_updateConstraints:^(MASConstraintMaker *make) {
         make.height.equalTo(@(height));
     }];
-    
+
     self.sizeDidChange ? self.sizeDidChange() : nil;
 }
 
+#pragma mark - setter methods
+
+- (void)setAttributedText:(NSAttributedString *)attributedText {
+    self.textView.attributedText = attributedText;
+}
+
+- (void)setLocation:(NSUInteger)location {
+    NSRange selectedRange = self.textView.selectedRange;
+    selectedRange.location = location;
+    self.textView.selectedRange = selectedRange;
+}
+
 #pragma mark - getter methods
+
+- (NSAttributedString *)attributedText {
+    return self.textView.attributedText;
+}
+
+- (NSUInteger)location {
+    return self.textView.selectedRange.location;
+}
+
+- (UIFont *)font {
+    return self.textView.font;
+}
+
+- (UIColor *)textColor {
+    return self.textView.textColor;
+}
 
 - (UIButton *)moreMediaButton {
     if (!_moreMediaButton) {
@@ -155,9 +183,9 @@ CGFloat const OCSInputToolBarHeight = 44.0f;
     return _sendButton;
 }
 
-- (YYTextView *)textView {
+- (UITextView *)textView {
     if (!_textView) {
-        YYTextView *textView = [[YYTextView alloc] init];
+        UITextView *textView = [[UITextView alloc] init];
         textView.backgroundColor = [UIColor colorWithHexString:@"#F7F7F7"];
         textView.font = [UIFont systemFontOfSize:14.0f];
         textView.textColor = [UIColor colorWithHexString:@"#333333"];

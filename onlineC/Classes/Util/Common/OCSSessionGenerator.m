@@ -6,7 +6,12 @@
 //
 
 #import "OCSSessionGenerator.h"
+#import "OCSSessionViewController.h"
 
 @implementation OCSSessionGenerator
+
++ (UIViewController *)sessionWithParameters:(NSDictionary *)parameters {
+    return [[OCSSessionViewController alloc] initWithParameters:parameters];
+}
 
 @end

@@ -34,6 +34,7 @@
 #import "OCSTiming.h"
 #import "OCSLinksHandler.h"
 #import "OCSMoreMediaPictureActionSheet.h"
+#import "OCSMoreMediaEmoticonView.h"
 
 #import "UIColor+OCSExtension.h"
 #import "UIView+OCSFrame.h"
@@ -42,11 +43,20 @@
 #import "NSString+OCSExtension.h"
 #import "NSDictionary+OCSExtension.h"
 #import "UIImage+OCSExtension.h"
+#import "NSTextAttachment+OCSExtension.h"
+#import "NSAttributedString+OCSExtension.h"
 
 #import <MJRefresh.h>
 #import <Masonry.h>
 #import <SocketRocket.h>
 #import <NSAttributedString+YYText.h>
+#import <TZImagePickerController.h>
+#import <GDTMediator/GDTMediator+FrameWork.h>
+
+#define SCREEN_HEIGHT ([UIScreen mainScreen].bounds.size.height)
+#define Is_iPhoneX (SCREEN_HEIGHT == 812)
+#define kStatusBarAndNavgationBarHeight (Is_iPhoneX ? 88 : 64)
+#define kBottomHeight (Is_iPhoneX ? 34 : 0)
 
 NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLinksEventNotification";
 
@@ -67,18 +77,21 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 @end
 
 
-@interface OCSSessionViewController () <UITableViewDataSource, UITableViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, OCSTimingDelegate, SRWebSocketDelegate, OCSMoreMediaToolViewDelegate, OCSMoreMediaPictureActionSheetDelegate>
+@interface OCSSessionViewController () <UITableViewDataSource, UITableViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, OCSTimingDelegate, SRWebSocketDelegate, OCSMoreMediaToolViewDelegate, OCSMoreMediaPictureActionSheetDelegate, TZImagePickerControllerDelegate, OCSMoreMediaEmoticonViewDelegate>
 
 @property (strong, nonatomic) UIView *backgroundView;
 @property (strong, nonatomic) OCSSessionTableView *tableView;
 @property (strong, nonatomic) MJRefreshHeader *refreshHeader;
 @property (strong, nonatomic) OCSInputToolBar *inputToolBar;
 @property (strong, nonatomic) OCSMoreMediaToolView *moreMediaToolView;
+@property (strong, nonatomic) OCSMoreMediaEmoticonView *emoticonView;
 @property (copy, nonatomic) NSArray *models;
 @property (assign, nonatomic) BOOL isShowingKeyboard;
 
-// 相片
-@property (strong, nonatomic) UIImagePickerController *imagePickerController;
+// 相机
+@property (strong, nonatomic) UIImagePickerController *cameraController;
+// 相册
+@property (strong, nonatomic) TZImagePickerController *photoController;
 
 // 排队计时器
 @property (strong, nonatomic) OCSTiming *timing;
@@ -88,9 +101,22 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 
 // 临时变量 队伍编号
 @property (copy, nonatomic) NSString *queueId;
-
 // 坐席状态
 @property (assign, nonatomic) BOOL hasSeatID;
+// 会话唯一标识
+@property (copy, nonatomic) NSString *sessionUid;
+
+
+// 用户唯一标识
+@property (copy, nonatomic) NSString *userId;
+// 用户优先级等级
+@property (copy, nonatomic) NSString *vipLevel;
+// 行政区域编号
+@property (copy, nonatomic) NSString *adress;
+// 用户登陆IP地址
+@property (copy, nonatomic) NSString *ip;
+// 业务类别
+@property (copy, nonatomic) NSString *queueUri;
 
 @end
 
@@ -98,6 +124,22 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 
 - (void)dealloc {
     NSLog(@"%s", __PRETTY_FUNCTION__);
+//    if (self.webSocket.readyState != SR_CLOSED || self.webSocket.readyState != SR_CLOSING) {
+//        [self.webSocket close];
+//    }
+}
+
+- (instancetype)initWithParameters:(NSDictionary *)parameters {
+    self = [super init];
+    if (!self) { return nil; }
+    
+    _userId = [parameters valueForKey:@"userId"];
+    _vipLevel = [parameters valueForKey:@"vipLevel"];
+    _adress = [parameters valueForKey:@"adress"];
+    _ip = [parameters valueForKey:@"ip"];
+    _queueUri = [parameters valueForKey:@"queueUri"];
+    
+    return self;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -150,13 +192,18 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     // 初始化数据
     self.models = @[];
     
-    // test
-    [self.moreMediaToolView setToolType:OCSMoreMediaToolTypeHumanService];
+//    // test
+//    [self.moreMediaToolView setToolType:OCSMoreMediaToolTypeHumanService];
     
     /*
      *  接入
      */
-    NSDictionary *parameters = @{@"userId": @"lily",
+    [self accessEvent];
+}
+
+- (void)accessEvent {
+    self.userId = @"lily";
+    NSDictionary *parameters = @{@"userId": self.userId,
                                  @"nickName": @"小黑鼠",
                                  @"userTel": @"15636001234",
                                  @"vipLevel": @10,
@@ -166,17 +213,18 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     [OCSNetworkManager accessWithParameters:parameters completion:^(id responseObject, NSError *error) {
         __strong __typeof(weakSelf) strongSelf = weakSelf;
         [strongSelf insertModel:responseObject completion:^{
-            [strongSelf robotChatEvent];
+            [strongSelf robotChatEventWithModel:responseObject];
         }];
     }];
 }
 
-- (void)robotChatEvent {
+- (void)robotChatEventWithModel:(OCSWelcomeModel *)model {
     /*
      *  欢迎语获取
      */
-    NSDictionary *parameters = @{@"chatId": @"131023345567",
-                                 @"userId": @"131023345567",
+    self.sessionUid = model.sessionUid;
+    NSDictionary *parameters = @{@"chatId": model.chatId,
+                                 @"userId": self.userId,
                                  @"consNo": @"",
                                  @"sessionCount": @"01",
                                  @"question": @"welcomMobMsg"};
@@ -208,14 +256,10 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:button];
 }
 
-- (void)presentImagePickerControllerWithSourceType:(UIImagePickerControllerSourceType)sourceType {
-    self.imagePickerController.sourceType = sourceType;
-    [self presentViewController:self.imagePickerController animated:YES completion:nil];
-}
-
 - (void)addSubviews {
     [self.view addSubview:self.backgroundView];
     [self.view addSubview:self.moreMediaToolView];
+    [self.view addSubview:self.emoticonView];
     [self.backgroundView addSubview:self.tableView];
     [self.backgroundView addSubview:self.inputToolBar];
     
@@ -234,7 +278,12 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     [self.moreMediaToolView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(self.backgroundView.mas_bottom);
         make.left.right.equalTo(self.view);
-        make.height.equalTo(@120);
+        make.height.equalTo(@(120 + kBottomHeight));//120
+    }];
+    [self.emoticonView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.equalTo(self.moreMediaToolView.mas_bottom);
+        make.left.right.equalTo(self.view);
+        make.height.equalTo(@(200 + kBottomHeight));
     }];
 }
 
@@ -279,24 +328,31 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 #pragma mark - 键盘和更多菜单显示隐藏相关方法
 
 - (BOOL)isShowingMoreMediaToolView {
-    return (self.backgroundView.height == self.view.height - 184) && (self.moreMediaToolView.isHidden == NO);
+    return (self.backgroundView.height == self.view.height - 184 - kBottomHeight) && (self.moreMediaToolView.isHidden == NO);
 }
 
 - (void)showMoreMediaToolView {
     // 184 = 64 + 120   120是MoreMediaToolView的高度
     self.moreMediaToolView.hidden = NO;
-    self.backgroundView.height = self.view.height - 184;
+    self.backgroundView.height = self.view.height - 184 - kBottomHeight;
+}
+
+- (void)showEmoticonView {
+    self.emoticonView.hidden = NO;
+    self.backgroundView.height = self.view.height - 184 - kBottomHeight - 200;
 }
 
 - (void)showKeyboardWithHeight:(CGFloat)KeyboardHeight {
     self.moreMediaToolView.hidden = YES;
+    self.emoticonView.hidden = YES;
     self.backgroundView.height = self.view.height - KeyboardHeight - 64;
 }
 
 - (void)recoverBackgroundView {
     BOOL isShowing = [self isShowingMoreMediaToolView];
     self.moreMediaToolView.hidden = !isShowing;
-    self.backgroundView.height = self.view.height - 64;
+    self.emoticonView.hidden = YES;
+    self.backgroundView.height = self.view.height - 64 - kBottomHeight;
 }
 
 #pragma mark - notification events
@@ -319,11 +375,16 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     NSString *actionType = [dictionary valueForKey:@"actionType"];
     NSString *href = [dictionary valueForKey:@"href"];
     
+    // 用户动作记录
+    NSDictionary *parameters = @{@"sessionUid": self.sessionUid,
+                                 @"actionType": [NSString stringWithFormat:@"%@&-&%@", actionType, href]};
+    [OCSNetworkManager actionRecordWithParameters:parameters completion:nil];
+    
     if (eventType == OCSLinksEventTypeTurnToHumanService &&
         self.moreMediaToolView.toolType == OCSMoreMediaToolTypeRobotService) {
         [self handleMoreMediaToolServiceTypeTurnToHumanEvent];
     } else if (eventType == OCSLinksEventTypeAppInner) {
-        
+        [[GDTMediator sharedInstance] GDTMediator_GDTPushToMicroAppAction:@{@"appname": href}];
     } else if (eventType == OCSLinksEventTypeAssociatedProblem &&
                self.moreMediaToolView.toolType == OCSMoreMediaToolTypeRobotService) {
         NSString *question = [href substringFromIndex:2];
@@ -331,12 +392,15 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     } else if (eventType == OCSLinksEventTypeURL) {
         NSString *URLString = [href substringFromIndex:2];
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:URLString]];
+    } else if (eventType == OCSLinksEventTypeLeave &&
+               self.moreMediaToolView.toolType == OCSMoreMediaToolTypeRobotService) {
+        if (self.queueId) {
+            NSDictionary *parameters = @{@"queueId": self.queueId,
+                                         @"endReason": @"01"};
+            [OCSNetworkManager dequeueHumanServiceWithParameters:parameters completion:nil];
+        }
+        [self.navigationController popViewControllerAnimated:YES];
     }
-    
-    // 用户动作记录
-    NSDictionary *parameters = @{@"sessionUid": @"",
-                                 @"actionType": [NSString stringWithFormat:@"%@&-&%@", actionType, href]};
-    
 }
 
 #pragma mark - button events
@@ -352,8 +416,49 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
                                  @"toNo": @"1234",
                                  @"fromNo": @"2345",
                                  @"selectCount": @1};
+    __weak __typeof(self) weakSelf = self;
     [OCSNetworkManager chatRecordWithParameters:parameters completion:^(id responseObject, NSError *error) {
-        [refreshHeader endRefreshing];
+        __strong __typeof(weakSelf) strongSelf = weakSelf;
+        if (responseObject) {
+            NSMutableArray *chatRecordModels = [[NSMutableArray alloc] init];
+            [responseObject enumerateObjectsUsingBlock:^(NSDictionary * _Nonnull dictionary, NSUInteger index, BOOL * _Nonnull stop) {
+                if (!dictionary) {
+                    return;
+                }
+                
+                NSString *empFlag = [dictionary valueForKey:@"empFlag"];
+                NSString *content = [dictionary valueForKey:@"content"];
+                NSString *imgUrl = [dictionary valueForKey:@"imgUrl"];
+                NSString *contentType = nil;
+                if (imgUrl.length == 0) {
+                    // 记录为图片
+                    contentType = @"01";
+                } else if (content.length == 0) {
+                    // 记录为文本
+                    contentType = @"02";
+                } else {
+                    // 记录为图文
+                    contentType = @"08";
+                }
+                NSMutableDictionary *mutableDictionary = [dictionary mutableCopy];
+                [mutableDictionary setValue:contentType forKey:@"contentType"];
+                // 客户
+                if ([empFlag isEqualToString:@"01"]) {
+                    OCSUserChatModel *model = [OCSUserChatModel modelWithDictionary:[mutableDictionary copy]];
+                    [chatRecordModels addObject:model];
+                } else if ([empFlag isEqualToString:@"02"] || [empFlag isEqualToString:@"03"]) {
+                    OCSRobotModel *model = [OCSRobotModel modelWithDictionary:[mutableDictionary copy]];
+                    [chatRecordModels addObject:model];
+                }
+            }];
+            [refreshHeader endRefreshing];
+            
+            if (strongSelf.tableView) {
+                [chatRecordModels addObjectsFromArray:strongSelf.models];
+                strongSelf.models = [chatRecordModels copy];
+                [strongSelf.tableView reloadData];
+            }
+        }
     }];
 }
 
@@ -391,6 +496,10 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
                 NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:0];
                 UITableViewCell *cell = [strongSelf.tableView cellForRowAtIndexPath:indexPath];
                 [cell refreshWithModel:model];
+                
+                NSDictionary *parameters = @{@"sessionUid": @"",
+                                             @"actionType": @"03&-&解决"};
+                [OCSNetworkManager actionRecordWithParameters:parameters completion:nil];
             }];
             
             [attributedString yy_setTextHighlightRange:notSolvedRange color:[UIColor colorWithHexString:@"#0C82F1"] backgroundColor:nil tapAction:^(UIView * _Nonnull containerView, NSAttributedString * _Nonnull text, NSRange range, CGRect rect) {
@@ -404,20 +513,14 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
                 UITableViewCell *cell = [strongSelf.tableView cellForRowAtIndexPath:indexPath];
                 [cell refreshWithModel:model];
                 
+                NSDictionary *parameters = @{@"sessionUid": @"",
+                                             @"actionType": @"03&-&未解决"};
+                [OCSNetworkManager actionRecordWithParameters:parameters completion:nil];
+                
                 // 未解决调用
-                NSString *string = @"很抱歉！问题未得到解决。\n\n是否转接【人工在线客服】";
-                NSRange humanServiceRange = [string rangeOfString:@"人工在线客服"];
-                NSDictionary *attributes = @{NSFontAttributeName: [UIFont systemFontOfSize:14.0f],
-                                             NSForegroundColorAttributeName: [UIColor colorWithHexString:@"#333333"]};
-                NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:string attributes:attributes];
-                [attributedString addAttribute:NSUnderlineStyleAttributeName value:@(NSUnderlineStyleSingle) range:humanServiceRange];
-                [attributedString yy_setTextHighlightRange:humanServiceRange color:[UIColor colorWithHexString:@"#0C82F1"] backgroundColor:nil tapAction:^(UIView * _Nonnull containerView, NSAttributedString * _Nonnull text, NSRange range, CGRect rect) {
-                    // 当前为人工客服则不能点击
-                    if (strongSelf.moreMediaToolView.toolType == OCSMoreMediaToolTypeRobotService) {
-                        [strongSelf handleMoreMediaToolServiceTypeTurnToHumanEvent];
-                    }
-                }];
-                OCSPromptModel *humanServicePromptModel = [OCSPromptModel modelWithDictionary:@{@"content": [attributedString copy]}];
+                NSString *string = @"很抱歉！问题未得到解决。\n\n是否转接【<a href='转人工'>人工在线客服</a>】";
+                NSAttributedString *content = [OCSLinksHandler attributedStringWithLinkString:string];
+                OCSPromptModel *humanServicePromptModel = [OCSPromptModel modelWithDictionary:@{@"content": content}];
                 if (humanServicePromptModel) {
                     [strongSelf insertModel:humanServicePromptModel completion:nil];
                 }
@@ -433,38 +536,48 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 
 #pragma mark - block
 
-- (void)handleInputToolBarSendButtonCallbackWithContent:(NSString *)content {
+- (void)handleInputToolBarSendButtonCallbackWithContent:(NSAttributedString *)content {
     // 校验输入内容是否为空
     if (content.length == 0) { return; }
 
-    // 用户发送信息上传并校验
-    NSDictionary *userChatParameters = @{@"chatId": @"131023345567",
-                                         @"toNo": @"131023345567",
-                                         @"fromNo": @"",
-                                         @"contentType": @"01",
-                                         @"content": content,
-                                         @"empFlag": @"03"};
-    __weak __typeof(self) weakSelf = self;
-    [OCSNetworkManager userChatWithParameters:userChatParameters completion:^(NSDictionary *responseObject, NSError *error) {
-        __strong __typeof(weakSelf) strongSelf = weakSelf;
-        // 上传并校验成功展示发送文本
-        OCSUserChatTextModel *model = [OCSUserChatTextModel modelWithDictionary:responseObject];
+    if (self.hasSeatID) {
+        // 用户发送信息上传并校验
+        NSDictionary *userChatParameters = @{@"chatId": @"131023345567",
+                                             @"toNo": @"131023345567",
+                                             @"fromNo": @"",
+                                             @"contentType": @"01",
+                                             @"content": content.plainString,
+                                             @"empFlag": @"03"};
+        __weak __typeof(self) weakSelf = self;
+        [OCSNetworkManager userChatWithParameters:userChatParameters completion:^(NSDictionary *responseObject, NSError *error) {
+            __strong __typeof(weakSelf) strongSelf = weakSelf;
+            if (responseObject) {
+                NSMutableDictionary *mutableResponseObject = [responseObject mutableCopy];
+                [mutableResponseObject setValue:@"01" forKey:@"contentType"];
+                // 上传并校验成功展示发送文本
+                OCSUserChatTextModel *model = [OCSUserChatTextModel modelWithDictionary:[mutableResponseObject copy]];
+                if (model) {
+                    [strongSelf insertModel:model completion:nil];
+                }
+                
+                // 人工客服聊天
+                NSDictionary *dictionary = @{@"command": @"message",
+                                             @"clientID": @"client1",
+                                             @"content": model.sensitiveWordContent};
+                NSError *error = nil;
+                NSString *message = [dictionary JSONStringWithOptions:NSJSONWritingPrettyPrinted encoding:NSUTF8StringEncoding error:&error];
+                [strongSelf.webSocket send:message];
+            }
+        }];
+    } else {
+        NSDictionary *dictionary = @{@"contentType": @"01",
+                                     @"sensitiveWordContent": content.plainString};
+        OCSUserChatTextModel *model = [OCSUserChatTextModel modelWithDictionary:dictionary];
         if (model) {
-            [strongSelf insertModel:model completion:nil];
+            [self insertModel:model completion:nil];
         }
-
-        if (strongSelf.hasSeatID) {
-            // 人工客服聊天
-            NSDictionary *dictionary = @{@"command": @"message",
-                                         @"clientID": @"client1",
-                                         @"content": model.sensitiveWordContent};
-            NSError *error = nil;
-            NSString *message = [dictionary JSONStringWithOptions:NSJSONWritingPrettyPrinted encoding:NSUTF8StringEncoding error:&error];
-            [strongSelf.webSocket send:message];
-        } else {
-            [strongSelf robotChatWithQuestion:model.sensitiveWordContent];
-        }
-    }];
+        [self robotChatWithQuestion:model.sensitiveWordContent.string];
+    }
 }
 
 #pragma mark - OCSTimingDelegate
@@ -499,9 +612,7 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     if (self.queueId) {
         NSDictionary *parameters = @{@"queueId": self.queueId,
                                      @"endReason": @"02"};
-        [OCSNetworkManager dequeueHumanServiceWithParameters:parameters completion:^(NSDictionary *responseObject, NSError *error) {
-            NSLog(@"%s--%@", __PRETTY_FUNCTION__, responseObject);
-        }];
+        [OCSNetworkManager dequeueHumanServiceWithParameters:parameters completion:nil];
     }
 }
 
@@ -511,24 +622,9 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     // 先断开websocket连接
     [self.webSocket close];
     // 提示用户离开
-    NSString *contentString = @"【系统提醒】对不起，人工在线客服繁忙，是否要离开？";
-    NSRange range = [contentString rangeOfString:@"离开"];
-    NSDictionary *attributes = @{NSFontAttributeName: [UIFont systemFontOfSize:14],
-                                 NSForegroundColorAttributeName: [UIColor colorWithHexString:@"#333333"]};
-    NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:contentString attributes:attributes];
-    __weak __typeof(self) weakSelf = self;
-    [attributedString yy_setTextHighlightRange:range color:[UIColor colorWithHexString:@"#0C82F1"] backgroundColor:nil tapAction:^(UIView * _Nonnull containerView, NSAttributedString * _Nonnull text, NSRange range, CGRect rect) {
-        __strong __typeof(weakSelf) strongSelf = weakSelf;
-        if (strongSelf.queueId) {
-            NSDictionary *parameters = @{@"queueId": strongSelf.queueId,
-                                         @"endReason": @"01"};
-            [OCSNetworkManager dequeueHumanServiceWithParameters:parameters completion:^(NSDictionary *responseObject, NSError *error) {
-                NSLog(@"%s--%@", __PRETTY_FUNCTION__, responseObject);
-                [strongSelf.navigationController popViewControllerAnimated:YES];
-            }];
-        }
-    }];
-    OCSPromptModel *model = [OCSPromptModel modelWithDictionary:@{@"content": [attributedString copy]}];
+    NSString *contentString = @"【系统提醒】对不起，人工在线客服繁忙，是否要<a href='离开'>离开</a>？";
+    NSAttributedString *content = [OCSLinksHandler attributedStringWithLinkString:contentString];
+    OCSPromptModel *model = [OCSPromptModel modelWithDictionary:@{@"content": content}];
     if (model) {
         [self insertModel:model completion:nil];
     }
@@ -562,9 +658,10 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 
 - (void)actionSheet:(OCSMoreMediaPictureActionSheet *)actionSheet clickedItemAtIndex:(NSInteger)index {
     if (index == 0 && [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
-        [self presentImagePickerControllerWithSourceType:UIImagePickerControllerSourceTypeCamera];
+        self.cameraController.sourceType = UIImagePickerControllerSourceTypeCamera;
+        [self presentViewController:self.cameraController animated:YES completion:nil];
     } else if (index == 1 && [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
-        [self presentImagePickerControllerWithSourceType:UIImagePickerControllerSourceTypePhotoLibrary];
+        [self presentViewController:self.photoController animated:YES completion:nil];
     }
 }
 
@@ -575,10 +672,34 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     
     // 返回的图片
     UIImage *originalImage = [info valueForKey:UIImagePickerControllerOriginalImage];
-    NSDictionary *dictionary = @{@"uploadImage": originalImage};
-    OCSUserChatPictureModel *model = [OCSUserChatPictureModel modelWithDictionary:dictionary];
-    [self insertModel:model completion:nil];
-    NSDictionary *parameters = @{@"uploadImages": originalImage};
+    if (originalImage) {
+        NSData *originalImageData = UIImageJPEGRepresentation(originalImage, 1.0);
+        NSDictionary *dictionary = @{@"contentType": @"02",
+                                     @"uploadImage": originalImageData};
+        OCSUserChatPictureModel *model = [OCSUserChatPictureModel modelWithDictionary:dictionary];
+        [self insertModel:model completion:nil];
+        NSDictionary *parameters = @{@"uploadImages": @[originalImageData]};
+        [OCSNetworkManager uploadPictureWithParameters:parameters completion:^(id responseObject, NSError *error) {
+        }];
+    }
+}
+
+#pragma mark - TZImagePickerControllerDelegate
+
+- (void)imagePickerController:(TZImagePickerController *)picker didFinishPickingPhotos:(NSArray<UIImage *> *)photos sourceAssets:(NSArray *)assets isSelectOriginalPhoto:(BOOL)isSelectOriginalPhoto {
+    NSMutableArray *photoDataArray = [[NSMutableArray alloc] init];
+    [photos enumerateObjectsUsingBlock:^(UIImage * _Nonnull image, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (image) {
+            NSData *originalImageData = UIImageJPEGRepresentation(image, 1.0);
+            NSDictionary *dictionary = @{@"contentType": @"02",
+                                         @"uploadImage": originalImageData};
+            OCSUserChatPictureModel *model = [OCSUserChatPictureModel modelWithDictionary:dictionary];
+            [self insertModel:model completion:nil];
+            [photoDataArray addObject:originalImageData];
+        }
+    }];
+    
+    NSDictionary *parameters = @{@"uploadImages": [photoDataArray copy]};
     [OCSNetworkManager uploadPictureWithParameters:parameters completion:^(id responseObject, NSError *error) {
     }];
 }
@@ -589,7 +710,8 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     if (serviceType == OCSMoreMediaToolServiceTypeTurnToHuman) {
         [self handleMoreMediaToolServiceTypeTurnToHumanEvent];
     } else if (serviceType == OCSMoreMediaToolServiceTypeEmoticon) {
-        
+        [self showEmoticonView];
+        [self.tableView scrollToBottom:NO];
     } else if (serviceType == OCSMoreMediaToolServiceTypePicture) {
         [OCSMoreMediaPictureActionSheet showWithDelegate:self];
     } else if (serviceType == OCSMoreMediaToolServiceTypePosition) {
@@ -657,11 +779,47 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     }];
 }
 
+#pragma mark - OCSMoreMediaEmoticonViewDelegate
+
+- (void)moreMediaEmoticonView:(OCSMoreMediaEmoticonView *)emoticonView didSelectModel:(NSString *)model {
+    NSMutableAttributedString *attributedText = [self.inputToolBar.attributedText mutableCopy];
+    NSTextAttachment *textAttachment = [[NSTextAttachment alloc] initWithData:nil ofType:nil];
+    UIImage *image = [UIImage imageNamed:model];
+    textAttachment.image = image;
+    textAttachment.imageTag = [NSString stringWithFormat:@"[:%@]", [model substringFromIndex:@"emoticon_".length]];
+    
+    UIFont *font = self.inputToolBar.font;
+    UIColor *textColor = self.inputToolBar.textColor;
+    CGFloat imgH = font.pointSize + 2;
+    CGFloat imgW = (image.size.width / image.size.height) * imgH;
+    //计算文字padding-top ，使图片垂直居中
+    CGFloat textPaddingTop = (font.lineHeight - font.pointSize) / 2;
+    textAttachment.bounds = CGRectMake(0, -textPaddingTop - 2, imgW, imgH);
+    NSMutableAttributedString *attributedString = [[NSAttributedString attributedStringWithAttachment:textAttachment] mutableCopy];
+    [attributedString addAttributes:@{NSFontAttributeName: font,
+                                      NSForegroundColorAttributeName: textColor} range:NSMakeRange(0, attributedString.length)];
+    [attributedText insertAttributedString:attributedString atIndex:self.inputToolBar.location];
+    NSUInteger oldLocation = self.inputToolBar.location;
+    self.inputToolBar.attributedText = [attributedText copy];
+    self.inputToolBar.location = oldLocation + attributedString.length;
+}
+
+- (void)moreMediaEmoticonViewDidCancel {
+    if (self.inputToolBar.location == 0) {
+        return;
+    }
+    
+    NSMutableAttributedString *attributedText = [self.inputToolBar.attributedText mutableCopy];
+    NSUInteger oldLocation = self.inputToolBar.location;
+    [attributedText deleteCharactersInRange:NSMakeRange(oldLocation - 1, 1)];
+    self.inputToolBar.attributedText = [attributedText copy];
+    self.inputToolBar.location = oldLocation - 1;
+}
+
 #pragma mark - SRWebSocketDelegate
 
 - (void)webSocketDidOpen:(SRWebSocket *)webSocket {
     [self.timing cancelTiming];
-    [self.moreMediaToolView setToolType:OCSMoreMediaToolTypeHumanService];
     
     // 订阅排队信息
     NSDictionary *dictionary = @{@"clientID": @"client1",
@@ -680,15 +838,18 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     if ([command isEqualToString:@"position"] && position.integerValue == -1) {
         // 排队完成信息
         NSString *seatID = [dictionary valueForKey:@"seatID"];
-        // 后台记录会话接入请求
-        NSDictionary *parameters = @{@"sessionUid": @"",
-                                     @"toNo": @"",
-                                     @"fromNo": seatID};
-        __weak __typeof(self) weakSelf = self;
-        [OCSNetworkManager sessionWithParameters:parameters completion:^(NSDictionary *responseObject, NSError *error) {
-            __strong __typeof(weakSelf) strongSelf = weakSelf;
-            strongSelf.hasSeatID = YES;
-        }];
+        if (seatID) {
+            [self.moreMediaToolView setToolType:OCSMoreMediaToolTypeHumanService];
+            // 后台记录会话接入请求
+            NSDictionary *parameters = @{@"sessionUid": @"",
+                                         @"toNo": @"",
+                                         @"fromNo": seatID};
+            __weak __typeof(self) weakSelf = self;
+            [OCSNetworkManager sessionWithParameters:parameters completion:^(NSDictionary *responseObject, NSError *error) {
+                __strong __typeof(weakSelf) strongSelf = weakSelf;
+                strongSelf.hasSeatID = YES;
+            }];
+        }
     } else if ([command isEqualToString:@"message"]) {
         // 聊天信息
         NSString *content = [dictionary valueForKey:@"content"];
@@ -732,7 +893,7 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 - (UIView *)backgroundView {
     if (!_backgroundView) {
         UIView *backgroundView = [[UIView alloc] init];
-        backgroundView.frame  =CGRectMake(0, 64, self.view.width, self.view.height - 64);
+        backgroundView.frame  =CGRectMake(0, 64, self.view.width, self.view.height - 64 - kBottomHeight);
         _backgroundView = backgroundView;
     }
     return _backgroundView;
@@ -784,7 +945,6 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 - (OCSInputToolBar *)inputToolBar {
     if (!_inputToolBar) {
         OCSInputToolBar *inputToolBar = [[OCSInputToolBar alloc] initWithFrame:CGRectZero];
-//        inputToolBar.frame = CGRectMake(0, self.view.height - OCSInputToolBarHeight, self.view.width, OCSInputToolBarHeight);
         __weak __typeof(self) weakSelf = self;
         [inputToolBar setMoreMediaButtonCallback:^{
             __strong __typeof(weakSelf) strongSelf = weakSelf;
@@ -802,7 +962,7 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 //        [inputToolBar setSendButtonCallback:^(id model) {
 //            [OCSEvaluationView show];
 //        }];
-        [inputToolBar setSendButtonCallback:^(NSString *content) {
+        [inputToolBar setSendButtonCallback:^(NSAttributedString *content) {
             __strong __typeof(weakSelf) strongSelf = weakSelf;
             [strongSelf handleInputToolBarSendButtonCallbackWithContent:content];
         }];
@@ -826,13 +986,31 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     return _moreMediaToolView;
 }
 
-- (UIImagePickerController *)imagePickerController {
-    if (!_imagePickerController) {
-        UIImagePickerController *imagePickerController = UIImagePickerController.new;
-        imagePickerController.delegate = self;
-        _imagePickerController = imagePickerController;
+- (OCSMoreMediaEmoticonView *)emoticonView {
+    if (!_emoticonView) {
+        OCSMoreMediaEmoticonView *emoticonView = [[OCSMoreMediaEmoticonView alloc] init];
+        [emoticonView setHeight:YES];
+        [emoticonView setDelegate:self];
+        _emoticonView = emoticonView;
     }
-    return _imagePickerController;
+    return _emoticonView;
+}
+
+- (UIImagePickerController *)cameraController {
+    if (!_cameraController) {
+        UIImagePickerController *cameraController = UIImagePickerController.new;
+        cameraController.delegate = self;
+        _cameraController = cameraController;
+    }
+    return _cameraController;
+}
+
+- (TZImagePickerController *)photoController {
+    if (!_photoController) {
+        TZImagePickerController *photoController = [[TZImagePickerController alloc] initWithMaxImagesCount:5 delegate:self];
+        _photoController = photoController;
+    }
+    return _photoController;
 }
 
 - (OCSTiming *)timing {

@@ -9,4 +9,6 @@
 
 @interface NSAttributedString (OCSExtension)
 
+@property (copy, readonly, nonatomic) NSString *plainString;
+
 @end

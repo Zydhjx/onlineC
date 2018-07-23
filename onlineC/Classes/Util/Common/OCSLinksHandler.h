@@ -12,6 +12,7 @@ typedef NS_ENUM(NSUInteger,  OCSLinksEventType) {
     OCSLinksEventTypeAppInner, // App内跳转
     OCSLinksEventTypeAssociatedProblem, // XX开头
     OCSLinksEventTypeURL, // 地址
+    OCSLinksEventTypeLeave, // 离开
 };
 
 @interface OCSLinksHandler : NSObject

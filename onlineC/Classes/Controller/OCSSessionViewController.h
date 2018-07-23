@@ -11,4 +11,6 @@ FOUNDATION_EXPORT NSString * const OCSSessionHandleLinksEventNotification;
 
 @interface OCSSessionViewController : UIViewController
 
+- (instancetype)initWithParameters:(NSDictionary *)parameters;
+
 @end

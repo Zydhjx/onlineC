@@ -9,4 +9,6 @@
 
 @interface NSTextAttachment (OCSExtension)
 
+@property (copy, nonatomic) NSString *imageTag;
+
 @end

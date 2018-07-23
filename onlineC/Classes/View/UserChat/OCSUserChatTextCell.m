@@ -60,7 +60,7 @@
 }
 
 - (void)refreshWithModel:(OCSUserChatTextModel *)model {
-    self.messageLabel.text = model.sensitiveWordContent;
+    self.messageLabel.attributedText = model.sensitiveWordContent;
 }
 
 #pragma mark - getter methods

@@ -75,12 +75,6 @@
     if (!_linksView) {
         YYLabel *linksView = [[YYLabel alloc] init];
         linksView.numberOfLines = 0;
-//        linksView.editable = NO;
-        
-        [linksView setHighlightTapAction:^(UIView * _Nonnull containerView, NSAttributedString * _Nonnull text, NSRange range, CGRect rect) {
-            NSLog(@"%@", text.string);
-        }];
-        
         _linksView = linksView;
     }
     return _linksView;
