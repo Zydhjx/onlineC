@@ -1,6 +1,0 @@
-framework module onlineC {
-  umbrella header "onlineC-umbrella.h"
-
-  export *
-  module * { export * }
-}
