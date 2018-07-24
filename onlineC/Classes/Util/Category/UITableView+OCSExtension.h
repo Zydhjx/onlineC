@@ -9,6 +9,10 @@
 
 @interface UITableView (OCSExtension)
 
-- (void)scrollToBottom:(BOOL)animated;
+//- (void)scrollToBottom:(BOOL)animated;
+
+- (void)scrollToBottomDelay:(BOOL)isDelay animated:(BOOL)animated;
+
+- (void)scrollToBottom;
 
 @end

@@ -81,11 +81,11 @@ CGFloat const OCSInputToolBarHeight = 44.0f;
 #pragma mark - button events
 
 - (void)handleMoreMediaButtonEvent:(UIButton *)button {
-    [self.textView endEditing:YES];
-    
     if (self.moreMediaButtonCallback) {
         self.moreMediaButtonCallback();
     }
+    
+    [self.textView endEditing:YES];
 }
 
 - (void)handleSendButtonEvent:(UIButton *)button {

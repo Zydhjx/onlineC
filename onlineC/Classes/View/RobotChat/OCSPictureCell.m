@@ -64,9 +64,17 @@
 - (void)refreshWithModel:(OCSPictureModel *)model {
     __weak __typeof(self) weakSelf = self;
     NSURL *imageURL = [NSURL URLWithString:model.imgUrl];
+    static BOOL flag = NO;
     [self.messageImageView sd_setImageWithURL:imageURL placeholderImage:nil completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
         __strong __typeof(weakSelf) strongSelf = weakSelf;
-        [strongSelf.tableView scrollToBottom:YES];
+        NSLog(@"%lf----%lf", image.size.width, image.size.height);
+        
+        if (strongSelf && !flag) {
+            flag = YES;
+            [strongSelf.tableView reloadData];
+//            strongSelf.messageImageView.image = image;
+        }
+//        [strongSelf.tableView scrollToBottom:YES];
     }];
 }
 
@@ -93,7 +101,6 @@
 - (UIImageView *)messageImageView {
     if (!_messageImageView) {
         UIImageView *messageImageView = [[UIImageView alloc] init];
-        messageImageView.backgroundColor = UIColor.redColor;
         _messageImageView = messageImageView;
     }
     return _messageImageView;

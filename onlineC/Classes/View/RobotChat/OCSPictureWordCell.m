@@ -97,7 +97,7 @@
         __weak __typeof(self) weakSelf = self;
         [imageView sd_setImageWithURL:[NSURL URLWithString:imgUrls[i]] placeholderImage:nil completed:^(UIImage * _Nullable image, NSError * _Nullable error, SDImageCacheType cacheType, NSURL * _Nullable imageURL) {
             __strong __typeof(weakSelf) strongSelf = weakSelf;
-            [strongSelf.tableView scrollToBottom:YES];
+            [strongSelf.tableView scrollToBottomDelay:YES animated:YES];
         }];
         [self.messageView addSubview:imageView];
         [imageView mas_makeConstraints:^(MASConstraintMaker *make) {

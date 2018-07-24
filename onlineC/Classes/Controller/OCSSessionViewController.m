@@ -60,6 +60,11 @@
 
 NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLinksEventNotification";
 
+/// 工具栏高度
+static CGFloat const kMoreMediaToolViewHeight = 120;
+/// 表情栏高度
+static CGFloat const kEmoticonViewHeight      = 200;
+
 @interface OCSSessionTableView : UITableView
 
 @property (copy, nonatomic) dispatch_block_t touchesEnded;
@@ -193,7 +198,7 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     self.models = @[];
     
 //    // test
-//    [self.moreMediaToolView setToolType:OCSMoreMediaToolTypeHumanService];
+    [self.moreMediaToolView setToolType:OCSMoreMediaToolTypeHumanService];
     
     /*
      *  接入
@@ -212,9 +217,11 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     __weak __typeof(self) weakSelf = self;
     [OCSNetworkManager accessWithParameters:parameters completion:^(id responseObject, NSError *error) {
         __strong __typeof(weakSelf) strongSelf = weakSelf;
-        [strongSelf insertModel:responseObject completion:^{
-            [strongSelf robotChatEventWithModel:responseObject];
-        }];
+        if (responseObject) {
+            [strongSelf insertModel:responseObject completion:^{
+                [strongSelf robotChatEventWithModel:responseObject];
+            }];
+        }
     }];
 }
 
@@ -231,7 +238,9 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     __weak __typeof(self) weakSelf = self;
     [OCSNetworkManager robotChatWithParameters:parameters completion:^(id responseObject, NSError *error) {
         __strong __typeof(weakSelf) strongSelf = weakSelf;
-        [strongSelf insertModel:responseObject completion:nil];
+        if (responseObject) {
+            [strongSelf insertModel:responseObject completion:nil];
+        }
     }];
 }
 
@@ -267,6 +276,9 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 }
 
 - (void)layout {
+    [self.backgroundView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.equalTo(self.view);
+    }];
     [self.tableView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.left.right.equalTo(self.backgroundView);
         make.bottom.equalTo(self.inputToolBar.mas_top);
@@ -278,12 +290,12 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     [self.moreMediaToolView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(self.backgroundView.mas_bottom);
         make.left.right.equalTo(self.view);
-        make.height.equalTo(@(120 + kBottomHeight));//120
+        make.height.equalTo(@(kMoreMediaToolViewHeight + kBottomHeight));
     }];
     [self.emoticonView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(self.moreMediaToolView.mas_bottom);
         make.left.right.equalTo(self.view);
-        make.height.equalTo(@(200 + kBottomHeight));
+        make.height.equalTo(@(kEmoticonViewHeight + kBottomHeight));
     }];
 }
 
@@ -316,56 +328,109 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
         [models addObject:model];
         self.models = [models copy];
         
-        NSInteger row = [self.tableView numberOfRowsInSection:0];
-        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:row inSection:0];
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:[self.models indexOfObject:model] inSection:0];
         [self.tableView insertRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
-        [self.tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionBottom animated:YES];
+        [self.tableView scrollToBottomDelay:NO animated:YES];
     }
     
     completion ? completion() : nil;
 }
 
+- (void)insertModels:(NSArray *)models completion:(dispatch_block_t)completion {
+    if (models && self.tableView) {
+        NSMutableArray *mutableArray = [self.models mutableCopy];
+        [mutableArray addObjectsFromArray:models];
+        self.models = [mutableArray copy];
+        
+        NSMutableArray *indexPaths = [[NSMutableArray alloc] init];
+        for (NSInteger i = 0; i < models.count; i++) {
+            id model = [models objectAtIndex:i];
+            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:[self.models indexOfObject:model] inSection:0];
+            [indexPaths addObject:indexPath];
+        }
+        
+        [self.tableView insertRowsAtIndexPaths:[indexPaths copy] withRowAnimation:UITableViewRowAnimationNone];
+        [self.tableView scrollToBottomDelay:NO animated:YES];
+    }
+}
+
 #pragma mark - 键盘和更多菜单显示隐藏相关方法
 
 - (BOOL)isShowingMoreMediaToolView {
-    return (self.backgroundView.height == self.view.height - 184 - kBottomHeight) && (self.moreMediaToolView.isHidden == NO);
+    return (self.backgroundView.height != self.view.height) && (self.moreMediaToolView.isHidden == NO);
+}
+
+- (BOOL)isShowingEmoticonView {
+    return (self.backgroundView.height != self.view.height) && (self.emoticonView.isHidden == NO);
 }
 
 - (void)showMoreMediaToolView {
-    // 184 = 64 + 120   120是MoreMediaToolView的高度
     self.moreMediaToolView.hidden = NO;
-    self.backgroundView.height = self.view.height - 184 - kBottomHeight;
+    
+    // 120是MoreMediaToolView的高度
+    [self.backgroundView mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.bottom.equalTo(self.view.mas_bottom).offset(-kMoreMediaToolViewHeight - kBottomHeight);
+    }];
+    
+    [UIView animateWithDuration:0.25 animations:^{
+        [self.view layoutIfNeeded];
+    }];
 }
 
 - (void)showEmoticonView {
     self.emoticonView.hidden = NO;
-    self.backgroundView.height = self.view.height - 184 - kBottomHeight - 200;
+    
+    // 200是EmoticonView的高度
+    [self.backgroundView mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.bottom.equalTo(self.view.mas_bottom).offset(-kMoreMediaToolViewHeight - kEmoticonViewHeight - kBottomHeight);
+    }];
+    
+    [UIView animateWithDuration:0.25 animations:^{
+        [self.view layoutIfNeeded];
+    }];
 }
 
-- (void)showKeyboardWithHeight:(CGFloat)KeyboardHeight {
+- (void)showKeyboardWithHeight:(CGFloat)keyboardHeight duration:(NSTimeInterval)duration {
     self.moreMediaToolView.hidden = YES;
     self.emoticonView.hidden = YES;
-    self.backgroundView.height = self.view.height - KeyboardHeight - 64;
+    
+    [self.backgroundView mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.bottom.equalTo(self.view.mas_bottom).offset(-keyboardHeight);//271
+    }];
+
+    [UIView animateWithDuration:duration animations:^{
+        [self.view layoutIfNeeded];
+    }];
 }
 
-- (void)recoverBackgroundView {
-    BOOL isShowing = [self isShowingMoreMediaToolView];
-    self.moreMediaToolView.hidden = !isShowing;
-    self.emoticonView.hidden = YES;
-    self.backgroundView.height = self.view.height - 64 - kBottomHeight;
+- (void)recoverBackgroundViewWithDuration:(NSTimeInterval)duration {
+    [self.backgroundView mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.bottom.equalTo(self.view);
+    }];
+    
+    [UIView animateWithDuration:duration animations:^{
+        [self.view layoutIfNeeded];
+    } completion:^(BOOL finished) {
+        self.emoticonView.hidden = YES;
+        self.moreMediaToolView.hidden = YES;
+    }];
 }
 
 #pragma mark - notification events
 
 - (void)keyboardWillShowNotification:(NSNotification *)notification {
     CGRect keyboardRect = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    CGFloat keyboardHeight = CGRectGetHeight(keyboardRect);
+    NSTimeInterval duration = [[[notification userInfo] objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     
-    [self showKeyboardWithHeight:keyboardHeight];
+    [self showKeyboardWithHeight:CGRectGetHeight(keyboardRect) duration:duration];
 }
 
 - (void)keyboardWillHideNotification:(NSNotification *)notification {
-    [self recoverBackgroundView];
+    NSTimeInterval duration = [[[notification userInfo] objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+
+    if (![self isShowingMoreMediaToolView]) {
+        [self recoverBackgroundViewWithDuration:duration];
+    }
 }
 
 - (void)handleLinksEventNotification:(NSNotification *)notification {
@@ -475,8 +540,6 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
     [OCSNetworkManager robotChatWithParameters:robotChatParameters completion:^(id responseObject, NSError *error) {
         __strong __typeof(weakSelf) strongSelf = weakSelf;
         if (responseObject) {
-            [strongSelf insertModel:responseObject completion:nil];
-            
             NSString *string = @"您好！您可以拨打95598热线，或登录95598智能互动网站、掌上电力APP进行电费查询。\n\n是否为您解决问题： 解决   未解决";
             NSDictionary *attributes = @{NSFontAttributeName: [UIFont systemFontOfSize:14.0f],
                                          NSForegroundColorAttributeName: [UIColor colorWithHexString:@"#333333"]};
@@ -527,9 +590,7 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
             }];
             
             model.content = [attributedString copy];
-            if (model) {
-                [strongSelf insertModel:model completion:nil];
-            }
+            [strongSelf insertModels:@[responseObject, model] completion:nil];
         }
     }];
 }
@@ -651,7 +712,6 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
     [self.inputToolBar endEditing:YES];
-    [self recoverBackgroundView];
 }
 
 #pragma mark - OCSMoreMediaPictureActionSheetDelegate
@@ -711,7 +771,7 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
         [self handleMoreMediaToolServiceTypeTurnToHumanEvent];
     } else if (serviceType == OCSMoreMediaToolServiceTypeEmoticon) {
         [self showEmoticonView];
-        [self.tableView scrollToBottom:NO];
+        [self.tableView scrollToBottomDelay:NO animated:NO];
     } else if (serviceType == OCSMoreMediaToolServiceTypePicture) {
         [OCSMoreMediaPictureActionSheet showWithDelegate:self];
     } else if (serviceType == OCSMoreMediaToolServiceTypePosition) {
@@ -819,8 +879,6 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 #pragma mark - SRWebSocketDelegate
 
 - (void)webSocketDidOpen:(SRWebSocket *)webSocket {
-    [self.timing cancelTiming];
-    
     // 订阅排队信息
     NSDictionary *dictionary = @{@"clientID": @"client1",
                                  @"command": @"join",
@@ -839,6 +897,7 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
         // 排队完成信息
         NSString *seatID = [dictionary valueForKey:@"seatID"];
         if (seatID) {
+            [self.timing cancelTiming];
             [self.moreMediaToolView setToolType:OCSMoreMediaToolTypeHumanService];
             // 后台记录会话接入请求
             NSDictionary *parameters = @{@"sessionUid": @"",
@@ -892,9 +951,7 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
 
 - (UIView *)backgroundView {
     if (!_backgroundView) {
-        UIView *backgroundView = [[UIView alloc] init];
-        backgroundView.frame  =CGRectMake(0, 64, self.view.width, self.view.height - 64 - kBottomHeight);
-        _backgroundView = backgroundView;
+        _backgroundView = [[UIView alloc] init];
     }
     return _backgroundView;
 }
@@ -911,7 +968,6 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
         [tableView setTouchesEnded:^{
             __strong __typeof(weakSelf) strongSelf = weakSelf;
             [strongSelf.inputToolBar endEditing:YES];
-            [strongSelf recoverBackgroundView];
         }];
         
         for (Class aClass in @[OCSMessageCell.class,
@@ -948,16 +1004,21 @@ NSString * const OCSSessionHandleLinksEventNotification = @"OCSSessionHandleLink
         __weak __typeof(self) weakSelf = self;
         [inputToolBar setMoreMediaButtonCallback:^{
             __strong __typeof(weakSelf) strongSelf = weakSelf;
-            if ([strongSelf isShowingMoreMediaToolView]) {
-                [strongSelf recoverBackgroundView];
+            if ([strongSelf isShowingEmoticonView]) {
+                [strongSelf recoverBackgroundViewWithDuration:0.35];
+            } else if ([strongSelf isShowingMoreMediaToolView]) {
+                [strongSelf recoverBackgroundViewWithDuration:0.25];
             } else {
                 [strongSelf showMoreMediaToolView];
-                [strongSelf.tableView scrollToBottom:NO];
+                [strongSelf.tableView scrollToBottomDelay:YES animated:NO];
             }
         }];
         [inputToolBar setTextViewDidBeginEditing:^{
             __strong __typeof(weakSelf) strongSelf = weakSelf;
-            [strongSelf.tableView scrollToBottom:NO];
+            [strongSelf.tableView scrollToBottom];
+//            [strongSelf.tableView scrollToBottomDelay:YES animated:YES];
+//            CGPoint offset = CGPointMake(0, strongSelf.tableView.contentSize.height-strongSelf.tableView.frame.size.height);
+//            [strongSelf.tableView setContentOffset:offset animated:NO];
         }];
 //        [inputToolBar setSendButtonCallback:^(id model) {
 //            [OCSEvaluationView show];
