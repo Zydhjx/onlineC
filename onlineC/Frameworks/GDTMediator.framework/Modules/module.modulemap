@@ -1,6 +1,0 @@
-framework module GDTMediator {
-  umbrella header "GDTMediator.h"
-
-  export *
-  module * { export * }
-}
