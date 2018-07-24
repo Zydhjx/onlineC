@@ -617,7 +617,6 @@
 		3DAD0C899DD490188F101FD76E59AA36 /* MJRefresh.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = MJRefresh.h; path = MJRefresh/MJRefresh.h; sourceTree = "<group>"; };
 		3DE6E84CB0A44934673062AC563A2032 /* UIView+WebCacheOperation.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "UIView+WebCacheOperation.h"; path = "SDWebImage/UIView+WebCacheOperation.h"; sourceTree = "<group>"; };
 		3E240D6470666E104A260BD4E1E27F95 /* OCSMessageCell.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = OCSMessageCell.m; sourceTree = "<group>"; };
-		3E8421D46FB765E2175290272D5482A2 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3FCF598C23FBBB3F78B70064913B95EE /* util.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = util.h; path = ObjectiveGumbo/Gumbo/util.h; sourceTree = "<group>"; };
 		40331820866BC57B73E947279468FA50 /* MASViewConstraint.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = MASViewConstraint.h; path = Masonry/MASViewConstraint.h; sourceTree = "<group>"; };
 		40E9E99A19748CAA9B58EEFECB42C809 /* TZVideoPlayerController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = TZVideoPlayerController.h; path = TZImagePickerController/TZImagePickerController/TZVideoPlayerController.h; sourceTree = "<group>"; };
@@ -1359,14 +1358,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		4989723983BA7CF56CB33CADA9CCD6EA /* GDTMediator.framework */ = {
-			isa = PBXGroup;
-			children = (
-				3E8421D46FB765E2175290272D5482A2 /* Info.plist */,
-			);
-			path = GDTMediator.framework;
-			sourceTree = "<group>";
-		};
 		4E689EF8F65D2E07D7A1024D1FBF7601 /* ObjectiveGumbo */ = {
 			isa = PBXGroup;
 			children = (
@@ -1482,7 +1473,6 @@
 			isa = PBXGroup;
 			children = (
 				CF719CA7B91B6AB7990818379C9735C4 /* Assets */,
-				74C2BD1A5A7D99F91AC4A4612E2D0BAC /* Frameworks */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -1575,15 +1565,6 @@
 			);
 			name = Util;
 			path = onlineC/Classes/Util;
-			sourceTree = "<group>";
-		};
-		74C2BD1A5A7D99F91AC4A4612E2D0BAC /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				4989723983BA7CF56CB33CADA9CCD6EA /* GDTMediator.framework */,
-			);
-			name = Frameworks;
-			path = onlineC/Frameworks;
 			sourceTree = "<group>";
 		};
 		77D9C2BA7D7597F3B7527E6B0B1DE86F /* Support Files */ = {
