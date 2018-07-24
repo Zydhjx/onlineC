@@ -1,6 +1,6 @@
 {
   "name": "onlineC",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "summary": "A short description of onlineC.",
   "description": "TODO: Add long description of the pod here.",
   "homepage": "https://github.com/Zydhjx/onlineC",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/Zydhjx/onlineC.git",
-    "tag": "0.1.13"
+    "tag": "0.1.14"
   },
   "platforms": {
     "ios": "8.0"
@@ -32,7 +32,15 @@
     "onlineC/**/*.json"
   ],
   "ios": {
-    "vendored_frameworks": "Frameworks/**/*.framework"
+    "vendored_frameworks": [
+      "Frameworks/**/*.framework",
+      "onlineC/Frameworks/**/*.framework"
+    ]
   },
-  "public_header_files": "onlineC/Classes/**/OCSSessionGenerator.h"
+  "public_header_files": "onlineC/Classes/**/OCSSessionGenerator.h",
+  "dependencies": {
+    "ObjectiveGumbo": [
+
+    ]
+  }
 }

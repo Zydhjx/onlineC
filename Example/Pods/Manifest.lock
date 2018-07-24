@@ -1,15 +1,22 @@
 PODS:
-  - onlineC (0.1.13)
+  - ObjectiveGumbo (0.1)
+  - onlineC (0.1.14):
+    - ObjectiveGumbo
 
 DEPENDENCIES:
   - onlineC (from `../`)
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - ObjectiveGumbo
 
 EXTERNAL SOURCES:
   onlineC:
     :path: "../"
 
 SPEC CHECKSUMS:
-  onlineC: c065408363e5e48e5be781f5e4cd223c0bc77e61
+  ObjectiveGumbo: 0704c4930688132abb3d5df2000334f30504856f
+  onlineC: 9a50dfeba7d5f89f6186e31bc45809266d7c8132
 
 PODFILE CHECKSUM: c746b39cda5eddbe633e470a459bd73323857df4
 

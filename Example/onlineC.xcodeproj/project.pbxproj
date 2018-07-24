@@ -341,10 +341,26 @@
 			);
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-onlineC_Example/Pods-onlineC_Example-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/ObjectiveGumbo/ObjectiveGumbo.framework",
+				"${PODS_ROOT}/../../onlineC/Frameworks/AFNetworking.framework",
+				"${PODS_ROOT}/../../onlineC/Frameworks/Masonry.framework",
+				"${PODS_ROOT}/../../onlineC/Frameworks/MJRefresh.framework",
+				"${PODS_ROOT}/../../onlineC/Frameworks/SDWebImage.framework",
+				"${PODS_ROOT}/../../onlineC/Frameworks/SocketRocket.framework",
+				"${PODS_ROOT}/../../onlineC/Frameworks/TZImagePickerController.framework",
+				"${PODS_ROOT}/../../onlineC/Frameworks/YYText.framework",
 				"${BUILT_PRODUCTS_DIR}/onlineC/onlineC.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ObjectiveGumbo.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AFNetworking.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Masonry.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MJRefresh.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SocketRocket.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TZImagePickerController.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YYText.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/onlineC.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -143,9 +143,25 @@ strip_invalid_archs() {
 
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
+  install_framework "${BUILT_PRODUCTS_DIR}/ObjectiveGumbo/ObjectiveGumbo.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/AFNetworking.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/Masonry.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/MJRefresh.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/SDWebImage.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/SocketRocket.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/TZImagePickerController.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/YYText.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/onlineC/onlineC.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
+  install_framework "${BUILT_PRODUCTS_DIR}/ObjectiveGumbo/ObjectiveGumbo.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/AFNetworking.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/Masonry.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/MJRefresh.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/SDWebImage.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/SocketRocket.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/TZImagePickerController.framework"
+  install_framework "${PODS_ROOT}/../../onlineC/Frameworks/YYText.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/onlineC/onlineC.framework"
 fi
 if [ "${COCOAPODS_PARALLEL_CODE_SIGN}" == "true" ]; then
