@@ -171,7 +171,7 @@
 		706B06F3C03A6EFECF38B4A4893ABEA4 /* TZLocationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D0F4EE588AD7504048266B9835A2E05C /* TZLocationManager.m */; };
 		709D18D6D3A7FC44BBFB26ADB20D6019 /* UIView+Layout.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D196DA51C84C67818AF0684775A67BB /* UIView+Layout.m */; };
 		71D410F9BE22E846C9B4F737D9D3BACA /* OCSModelGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E2EF1F46FB82B61879C7E5ED29170EB /* OCSModelGenerator.m */; };
-		72301F615D26047198E79FBEAD5D5990 /* OCSSessionGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 8EE595724351272B832806CA3ECB06C6 /* OCSSessionGenerator.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		72301F615D26047198E79FBEAD5D5990 /* OCSSessionGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 8EE595724351272B832806CA3ECB06C6 /* OCSSessionGenerator.h */; settings = {ATTRIBUTES = (Project, Public, ); }; };
 		72F6F0391C6961CB639A391C3039500E /* attribute.c in Sources */ = {isa = PBXBuildFile; fileRef = 6E4E891B4C5E79D9788B35E44B8F90F9 /* attribute.c */; settings = {COMPILER_FLAGS = "-DOS_OBJECT_USE_OBJC=0"; }; };
 		735CA8E3AD0AB478D19A1243912A748D /* YYTextInput.m in Sources */ = {isa = PBXBuildFile; fileRef = EE3CBB6DE7EAA506C8EAAF8C73C0B7B3 /* YYTextInput.m */; };
 		738E9A68006F2965A85449751DEF0B36 /* OCSMoreMediaModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 6437782C97F1E9956F79F3A04E0A4BAC /* OCSMoreMediaModel.m */; };

@@ -51,7 +51,7 @@
 #import <SocketRocket.h>
 #import <NSAttributedString+YYText.h>
 #import <TZImagePickerController.h>
-#import <GDTMediator/GDTMediator+FrameWork.h>
+//#import <GDTMediator/GDTMediator+FrameWork.h>
 
 #define SCREEN_HEIGHT ([UIScreen mainScreen].bounds.size.height)
 #define Is_iPhoneX (SCREEN_HEIGHT == 812)
@@ -449,7 +449,7 @@ static CGFloat const kEmoticonViewHeight      = 200;
         self.moreMediaToolView.toolType == OCSMoreMediaToolTypeRobotService) {
         [self handleMoreMediaToolServiceTypeTurnToHumanEvent];
     } else if (eventType == OCSLinksEventTypeAppInner) {
-        [[GDTMediator sharedInstance] GDTMediator_GDTPushToMicroAppAction:@{@"appname": href}];
+//        [[GDTMediator sharedInstance] GDTMediator_GDTPushToMicroAppAction:@{@"appname": href}];
     } else if (eventType == OCSLinksEventTypeAssociatedProblem &&
                self.moreMediaToolView.toolType == OCSMoreMediaToolTypeRobotService) {
         NSString *question = [href substringFromIndex:2];
