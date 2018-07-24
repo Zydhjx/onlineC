@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'onlineC'
-  s.version          = '0.1.12'
+  s.version          = '0.1.13'
   s.summary          = 'A short description of onlineC.'
 
 # This description is used to generate tags and improve search results.
@@ -40,7 +40,7 @@ TODO: Add long description of the pod here.
 #  s.ios.vendored_frameworks = 'onlineC/Frameworks/**/*.framework'
   s.ios.vendored_frameworks  = ['Frameworks/**/*.framework', 'onlineC/Frameworks/**/*.framework']
 
-  s.public_header_files = 'Pod/Classes/**/OCSSessionGenerator.h'
+  s.public_header_files = 'onlineC/Classes/**/OCSSessionGenerator.h'
   s.frameworks = 'UIKit', 'CoreGraphics', 'AVFoundation', 'Accelerate', 'AssetsLibrary', 'CoreMedia', 'Photos', 'CoreLocation'
   s.dependency 'AFNetworking'
   s.dependency 'Masonry'
